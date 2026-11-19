@@ -14,7 +14,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN mkdir -p public
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm build
+RUN pnpm exec next build
 
 FROM base AS runner
 WORKDIR /app
@@ -29,4 +29,4 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
 EXPOSE 3000
-CMD ["pnpm", "start"]
+CMD ["pnpm", "exec", "next", "start"]

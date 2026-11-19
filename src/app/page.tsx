@@ -12,9 +12,10 @@ import {
   Wrench,
 } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export default function HomePage() {
   return (
@@ -38,18 +39,20 @@ export default function HomePage() {
               and grow with public SEO profiles and free micro-tools—all inside one modular OS.
             </p>
             <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-              <Button asChild size="lg" className="bg-indigo-600 text-white hover:bg-indigo-700">
-                <Link href="/dashboard" className="flex items-center gap-2">
-                  <span>Launch Dashboard OS</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/tools" className="flex items-center gap-2">
-                  <Wrench className="h-4 w-4" />
-                  <span>Try Free Micro-Tools</span>
-                </Link>
-              </Button>
+              <Link
+                href="/dashboard"
+                className={cn(buttonVariants({ size: "lg" }), "bg-indigo-600 text-white hover:bg-indigo-700")}
+              >
+                <span>Launch Dashboard OS</span>
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+              <Link
+                href="/tools"
+                className={buttonVariants({ size: "lg", variant: "outline" })}
+              >
+                <Wrench className="mr-2 h-4 w-4" />
+                <span>Try Free Micro-Tools</span>
+              </Link>
             </div>
           </div>
         </section>

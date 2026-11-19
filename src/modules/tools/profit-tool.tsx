@@ -6,8 +6,9 @@ import { Calculator, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export function ProfitTool() {
   const [revenue, setRevenue] = useState("50000");
@@ -97,12 +98,13 @@ export function ProfitTool() {
             </div>
           </div>
 
-          <Button asChild className="w-full bg-indigo-600 text-white hover:bg-indigo-700">
-            <Link href="/dashboard" className="flex items-center justify-center gap-2">
-              <span>Save Entry to Your Hisab-Kitab Workspace</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
+          <Link
+            href="/dashboard"
+            className={cn(buttonVariants(), "w-full bg-indigo-600 text-white hover:bg-indigo-700")}
+          >
+            <span>Save Entry to Your Hisab-Kitab Workspace</span>
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
         </CardContent>
       </Card>
     </div>

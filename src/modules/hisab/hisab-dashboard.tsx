@@ -24,7 +24,7 @@ import {
   Wallet,
   Wrench,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 type WorkspaceType = "personal" | "business";
 type EntryType = "income" | "expense" | "receivable" | "payable";
@@ -162,7 +163,11 @@ export function HisabDashboard() {
       id: Date.now().toString(),
       workspace,
       title: title.trim(),
-      counterparty: counterparty.trim() ? (counterparty.startsWith("@") ? counterparty.trim() : `@${counterparty.trim()}`) : "@self",
+      counterparty: counterparty.trim()
+        ? counterparty.startsWith("@")
+          ? counterparty.trim()
+          : `@${counterparty.trim()}`
+        : "@self",
       type: entryType,
       amount: numericAmount,
       synced: counterparty.trim().length > 0,
@@ -189,20 +194,23 @@ export function HisabDashboard() {
 
         {/* Workspace Switcher */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="mb-6 w-full justify-between px-3">
-              <span className="flex items-center gap-2 truncate">
-                {workspace === "personal" ? (
-                  <User className="h-4 w-4 text-indigo-500" />
-                ) : (
-                  <Building2 className="h-4 w-4 text-emerald-500" />
-                )}
-                <span className="truncate font-medium">
-                  {workspace === "personal" ? "Personal Space" : "TaxationPk Biz"}
-                </span>
+          <DropdownMenuTrigger
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "mb-6 w-full justify-between px-3"
+            )}
+          >
+            <span className="flex items-center gap-2 truncate">
+              {workspace === "personal" ? (
+                <User className="h-4 w-4 text-indigo-500" />
+              ) : (
+                <Building2 className="h-4 w-4 text-emerald-500" />
+              )}
+              <span className="truncate font-medium">
+                {workspace === "personal" ? "Personal Space" : "TaxationPk Biz"}
               </span>
-              <ChevronsUpDown className="h-4 w-4 opacity-50" />
-            </Button>
+            </span>
+            <ChevronsUpDown className="h-4 w-4 opacity-50" />
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56">
             <DropdownMenuLabel>Switch Workspace</DropdownMenuLabel>
@@ -223,16 +231,18 @@ export function HisabDashboard() {
             <Wallet className="h-4 w-4 text-indigo-600" />
             Hisab-Kitab Ledger
           </Button>
-          <Button asChild variant="ghost" className="w-full justify-start gap-2.5">
-            <Link href="/tools">
-              <Wrench className="h-4 w-4" /> Free Micro-Tools
-            </Link>
-          </Button>
-          <Button asChild variant="ghost" className="w-full justify-start gap-2.5">
-            <Link href="/p/taxationpk">
-              <Globe className="h-4 w-4" /> Public SEO Profile
-            </Link>
-          </Button>
+          <Link
+            href="/tools"
+            className={cn(buttonVariants({ variant: "ghost" }), "w-full justify-start gap-2.5")}
+          >
+            <Wrench className="h-4 w-4" /> Free Micro-Tools
+          </Link>
+          <Link
+            href="/p/taxationpk"
+            className={cn(buttonVariants({ variant: "ghost" }), "w-full justify-start gap-2.5")}
+          >
+            <Globe className="h-4 w-4" /> Public SEO Profile
+          </Link>
           <Button variant="ghost" className="w-full justify-start gap-2.5 text-muted-foreground" disabled>
             <Users className="h-4 w-4" /> Affiliates &amp; Referrals
             <Badge variant="outline" className="ml-auto text-[10px]">Soon</Badge>
@@ -251,7 +261,6 @@ export function HisabDashboard() {
 
       {/* Main Content */}
       <div className="flex flex-1 flex-col pb-20 md:pb-0">
-        {/* Top Bar */}
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-md sm:px-6">
           <div className="flex items-center gap-3">
             <Link href="/" className="md:hidden">
@@ -270,7 +279,6 @@ export function HisabDashboard() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Mobile Workspace Quick Toggle */}
             <Button
               variant="outline"
               size="sm"
@@ -291,10 +299,10 @@ export function HisabDashboard() {
             </Button>
 
             <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="bg-indigo-600 text-white hover:bg-indigo-700">
-                  <Plus className="mr-1.5 h-4 w-4" /> Add Entry
-                </Button>
+              <DialogTrigger
+                className={cn(buttonVariants({ size: "sm" }), "bg-indigo-600 text-white hover:bg-indigo-700")}
+              >
+                <Plus className="mr-1.5 h-4 w-4" /> Add Entry
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -359,9 +367,7 @@ export function HisabDashboard() {
           </div>
         </header>
 
-        {/* Dashboard Body */}
         <main className="mx-auto w-full max-w-6xl space-y-6 p-4 sm:p-6">
-          {/* Summary Cards */}
           <div className="grid gap-4 sm:grid-cols-3">
             <Card>
               <CardHeader className="pb-2">
@@ -400,7 +406,6 @@ export function HisabDashboard() {
             </Card>
           </div>
 
-          {/* Ledger & Modular App Store */}
           <Tabs defaultValue="ledger" className="space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <TabsList>
