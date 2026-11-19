@@ -26,6 +26,14 @@ export const auth = betterAuth({
     "http://ebrain.158.220.75.77.sslip.io",
     "https://ebrain.158.220.75.77.sslip.io",
   ],
+  user: {
+    additionalFields: {
+      phone: {
+        type: "string",
+        required: false,
+      },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
@@ -42,6 +50,16 @@ export const auth = betterAuth({
               role: isFirstUser ? "admin" : "user",
             },
           };
+        },
+        after: async (createdUser) => {
+          await db.insert(schema.auditLog).values({
+            id: crypto.randomUUID(),
+            actorId: createdUser.id,
+            actorEmail: createdUser.email,
+            action: "user.registered",
+            target: createdUser.email,
+            details: `Role assigned: ${createdUser.role || "user"}`,
+          });
         },
       },
     },

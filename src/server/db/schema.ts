@@ -6,6 +6,7 @@ export const user = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
+  phone: text("phone"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   role: text("role").default("user"),
@@ -90,4 +91,32 @@ export const invitation = pgTable("invitation", {
   inviterId: text("inviter_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+});
+
+export const auditLog = pgTable("audit_log", {
+  id: text("id").primaryKey(),
+  actorId: text("actor_id").references(() => user.id, { onDelete: "set null" }),
+  actorEmail: text("actor_email"),
+  organizationId: text("organization_id").references(() => organization.id, {
+    onDelete: "cascade",
+  }),
+  action: text("action").notNull(),
+  target: text("target"),
+  details: text("details"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const crmRecord = pgTable("crm_record", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  kind: text("kind").default("client").notNull(), // "client" | "lead" | "vendor" | "request"
+  status: text("status").default("active").notNull(), // "active" | "pending" | "completed"
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });

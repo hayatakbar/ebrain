@@ -2,17 +2,20 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Ban, Building2, CheckCircle, Shield, Users } from "lucide-react";
+import { Activity, Ban, Briefcase, Building2, CheckCircle, Search, Shield, Users } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { authClient } from "@/lib/auth-client";
 
 interface PlatformUser {
   id: string;
   name: string;
   email: string;
+  phone: string | null;
   role: string | null;
   banned: boolean | null;
   createdAt: string;
@@ -25,13 +28,29 @@ interface PlatformOrg {
   createdAt: string;
 }
 
+interface PlatformAudit {
+  id: string;
+  actorEmail: string | null;
+  action: string;
+  target: string | null;
+  details: string | null;
+  createdAt: string;
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
 
-  const [stats, setStats] = useState({ totalUsers: 0, totalOrganizations: 0, totalMemberships: 0 });
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalOrganizations: 0,
+    totalMemberships: 0,
+    totalCrmRecords: 0,
+  });
   const [users, setUsers] = useState<PlatformUser[]>([]);
   const [orgs, setOrgs] = useState<PlatformOrg[]>([]);
+  const [logs, setLogs] = useState<PlatformAudit[]>([]);
+  const [search, setSearch] = useState("");
   const [error, setError] = useState("");
 
   const loadOverview = useCallback(async () => {
@@ -45,9 +64,17 @@ export default function AdminDashboardPage() {
       return;
     }
     const data = await res.json();
-    setStats(data.stats || { totalUsers: 0, totalOrganizations: 0, totalMemberships: 0 });
+    setStats(
+      data.stats || {
+        totalUsers: 0,
+        totalOrganizations: 0,
+        totalMemberships: 0,
+        totalCrmRecords: 0,
+      }
+    );
     setUsers(data.users || []);
     setOrgs(data.organizations || []);
+    setLogs(data.auditLogs || []);
   }, [router]);
 
   useEffect(() => {
@@ -55,9 +82,7 @@ export default function AdminDashboardPage() {
       router.replace("/login");
       return;
     }
-    if (session) {
-      loadOverview();
-    }
+    if (session) loadOverview();
   }, [isPending, session, router, loadOverview]);
 
   async function togglePlatformRole(userId: string, currentRole: string | null) {
@@ -75,6 +100,12 @@ export default function AdminDashboardPage() {
     await loadOverview();
   }
 
+  const filteredUsers = users.filter(
+    (u) =>
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen flex flex-col bg-muted/20">
       <SiteHeader />
@@ -87,7 +118,7 @@ export default function AdminDashboardPage() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Platform Super Admin Dashboard</h1>
             <p className="text-sm text-muted-foreground">
-              Manage all registered users, organizations, roles, and platform access.
+              Full visibility over users, organizations, CRM usage, and platform audit logs.
             </p>
           </div>
         </div>
@@ -98,101 +129,157 @@ export default function AdminDashboardPage() {
           </Card>
         ) : (
           <>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-4">
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Total Registered Users</CardDescription>
-                  <CardTitle className="text-3xl font-bold flex items-center gap-2">
+                  <CardDescription>Registered Users</CardDescription>
+                  <CardTitle className="text-2xl font-bold flex items-center gap-2">
                     <Users className="h-5 w-5 text-indigo-600" /> {stats.totalUsers}
                   </CardTitle>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Total Organizations</CardDescription>
-                  <CardTitle className="text-3xl font-bold flex items-center gap-2">
+                  <CardDescription>Organizations</CardDescription>
+                  <CardTitle className="text-2xl font-bold flex items-center gap-2">
                     <Building2 className="h-5 w-5 text-emerald-600" /> {stats.totalOrganizations}
                   </CardTitle>
                 </CardHeader>
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardDescription>Total Org Memberships</CardDescription>
-                  <CardTitle className="text-3xl font-bold">{stats.totalMemberships}</CardTitle>
+                  <CardDescription>Org Memberships</CardDescription>
+                  <CardTitle className="text-2xl font-bold">{stats.totalMemberships}</CardTitle>
+                </CardHeader>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>CRM Records</CardDescription>
+                  <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                    <Briefcase className="h-5 w-5 text-sky-600" /> {stats.totalCrmRecords}
+                  </CardTitle>
                 </CardHeader>
               </Card>
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Registered Users</CardTitle>
-                <CardDescription>Promote staff to Super Admin or manage user access.</CardDescription>
-              </CardHeader>
-              <CardContent className="divide-y p-0">
-                {users.map((u) => (
-                  <div
-                    key={u.id}
-                    className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm">{u.name}</p>
-                        <Badge variant={u.role === "admin" ? "default" : "secondary"}>
-                          {u.role || "user"}
-                        </Badge>
-                        {u.banned && <Badge variant="destructive">Banned</Badge>}
-                      </div>
-                      <p className="text-xs text-muted-foreground">{u.email}</p>
-                    </div>
+            <Tabs defaultValue="users" className="space-y-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <TabsList>
+                  <TabsTrigger value="users">Users ({users.length})</TabsTrigger>
+                  <TabsTrigger value="orgs">Organizations ({orgs.length})</TabsTrigger>
+                  <TabsTrigger value="logs">Audit Logs ({logs.length})</TabsTrigger>
+                </TabsList>
 
-                    {u.id !== session?.user?.id && (
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => togglePlatformRole(u.id, u.role)}
-                        >
-                          {u.role === "admin" ? "Demote to User" : "Make Super Admin"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={u.banned ? "secondary" : "destructive"}
-                          onClick={() => toggleBan(u.id, u.banned)}
-                        >
-                          {u.banned ? (
-                            <span className="flex items-center gap-1"><CheckCircle className="h-3.5 w-3.5" /> Unban</span>
-                          ) : (
-                            <span className="flex items-center gap-1"><Ban className="h-3.5 w-3.5" /> Ban</span>
-                          )}
-                        </Button>
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search user name or email..."
+                    className="pl-8 bg-background"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <TabsContent value="users">
+                <Card>
+                  <CardContent className="divide-y p-0">
+                    {filteredUsers.map((u) => (
+                      <div
+                        key={u.id}
+                        className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm">{u.name}</p>
+                            <Badge variant={u.role === "admin" ? "default" : "secondary"}>
+                              {u.role || "user"}
+                            </Badge>
+                            {u.banned && <Badge variant="destructive">Banned</Badge>}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {u.email} {u.phone ? `• ${u.phone}` : ""}
+                          </p>
+                        </div>
+
+                        {u.id !== session?.user?.id && (
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => togglePlatformRole(u.id, u.role)}
+                            >
+                              {u.role === "admin" ? "Demote to User" : "Make Super Admin"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={u.banned ? "secondary" : "destructive"}
+                              onClick={() => toggleBan(u.id, u.banned)}
+                            >
+                              {u.banned ? (
+                                <span className="flex items-center gap-1"><CheckCircle className="h-3.5 w-3.5" /> Unban</span>
+                              ) : (
+                                <span className="flex items-center gap-1"><Ban className="h-3.5 w-3.5" /> Ban</span>
+                              )}
+                            </Button>
+                          </div>
+                        )}
                       </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="orgs">
+                <Card>
+                  <CardContent className="divide-y p-0">
+                    {orgs.length === 0 ? (
+                      <div className="p-6 text-sm text-muted-foreground">No organizations created yet.</div>
+                    ) : (
+                      orgs.map((o) => (
+                        <div key={o.id} className="flex items-center justify-between p-4">
+                          <div>
+                            <p className="font-medium text-sm">{o.name}</p>
+                            <p className="text-xs text-muted-foreground">/{o.slug}</p>
+                          </div>
+                          <Badge variant="outline">Active</Badge>
+                        </div>
+                      ))
                     )}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Organizations on Platform</CardTitle>
-                <CardDescription>Businesses and customer workspaces registered in PostgreSQL.</CardDescription>
-              </CardHeader>
-              <CardContent className="divide-y p-0">
-                {orgs.length === 0 ? (
-                  <div className="p-6 text-sm text-muted-foreground">No organizations created yet.</div>
-                ) : (
-                  orgs.map((o) => (
-                    <div key={o.id} className="flex items-center justify-between p-4">
-                      <div>
-                        <p className="font-medium text-sm">{o.name}</p>
-                        <p className="text-xs text-muted-foreground">/{o.slug}</p>
-                      </div>
-                      <Badge variant="outline">Active</Badge>
-                    </div>
-                  ))
-                )}
-              </CardContent>
-            </Card>
+              <TabsContent value="logs">
+                <Card>
+                  <CardContent className="divide-y p-0">
+                    {logs.length === 0 ? (
+                      <div className="p-6 text-sm text-muted-foreground">No audit logs yet.</div>
+                    ) : (
+                      logs.map((log) => (
+                        <div key={log.id} className="flex items-center justify-between gap-4 p-4 text-sm">
+                          <div className="flex items-start gap-2.5">
+                            <Activity className="mt-0.5 h-4 w-4 text-sky-600 shrink-0" />
+                            <div>
+                              <p className="font-medium">
+                                {log.action}{" "}
+                                {log.target && <span className="text-muted-foreground">→ {log.target}</span>}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {log.actorEmail || "system"} {log.details ? `• ${log.details}` : ""}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="shrink-0 text-xs text-muted-foreground">
+                            {new Date(log.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </>
         )}
       </main>

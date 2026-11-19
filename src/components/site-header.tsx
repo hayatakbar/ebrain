@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Brain, LayoutDashboard, LogOut, Moon, Shield, Sun } from "lucide-react";
+import { Brain, LayoutDashboard, LogOut, Moon, Settings, Shield, Sun } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { authClient } from "@/lib/auth-client";
@@ -43,7 +43,7 @@ export function SiteHeader() {
 
           {isPending ? null : session?.user ? (
             <>
-              <Badge variant="secondary" className="hidden sm:inline-flex">
+              <Badge variant="secondary" className="hidden md:inline-flex">
                 {session.user.name} ({session.user.role || "user"})
               </Badge>
               {session.user.role === "admin" && (
@@ -52,9 +52,16 @@ export function SiteHeader() {
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
                 >
                   <Shield className="mr-1.5 h-4 w-4 text-amber-500" />
-                  <span>Admin</span>
+                  <span className="hidden sm:inline">Admin</span>
                 </Link>
               )}
+              <Link
+                href="/settings"
+                className={buttonVariants({ variant: "ghost", size: "icon" })}
+                aria-label="Profile settings"
+              >
+                <Settings className="h-4 w-4" />
+              </Link>
               <Link
                 href="/dashboard"
                 className={cn(buttonVariants({ size: "sm" }), "bg-indigo-600 text-white hover:bg-indigo-700")}
